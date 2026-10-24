@@ -83,6 +83,10 @@ export function getFreeSlotsForDay(
   fixedBlocks: ScheduledBlock[],
   prefs: StudentPreferences
 ): TimeSlot[] {
+  if (prefs.daysOff && prefs.daysOff.includes(day)) {
+    return []
+  }
+
   const wakeMin = timeToMinutes(prefs.wakeTime)
   const bedMin = timeToMinutes(prefs.bedTime)
   const bufferMin = prefs.bufferMinutes
@@ -197,11 +201,27 @@ export function generateRealisticPlan(
         const dIdx = (targetDayIdx + offset) <= dueDayIdx ? targetDayIdx + offset : targetDayIdx - offset
         if (dIdx >= 0 && dIdx <= dueDayIdx) {
           const candidate = DAYS_OF_WEEK[dIdx]
+          // Respect designated Days Off (student sick day, reset day, or holiday)
+          if (prefs.daysOff && prefs.daysOff.includes(candidate)) continue
           if (!candidateDays.includes(candidate)) candidateDays.push(candidate)
         }
       }
 
+      // Compute energy-adjusted daily focus limit
+      const energyDelta = prefs.energyLevel === 'drained' ? -2 : prefs.energyLevel === 'fresh' ? 1 : 0
+      const effectiveDailyMaxHours = Math.max(1.5, prefs.maxDailyDeepWorkHours + energyDelta)
+      const effectiveDailyMaxMinutes = Math.round(effectiveDailyMaxHours * 60)
+
       for (const candidateDay of candidateDays) {
+        // Guard daily cognitive capacity
+        const existingDayStudyMinutes = scheduledBlocks
+          .filter(b => b.dayOfWeek === candidateDay && b.type === 'study_sprint')
+          .reduce((acc, b) => acc + b.durationMinutes, 0)
+
+        if (existingDayStudyMinutes + sprint.durationMinutes > effectiveDailyMaxMinutes) {
+          continue // Daily limit reached, seek next free day
+        }
+
         const freeSlots = getFreeSlotsForDay(candidateDay, scheduledBlocks, prefs)
 
         for (const slot of freeSlots) {

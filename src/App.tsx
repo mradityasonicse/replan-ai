@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Header } from './components/Header'
+import type { NavView } from './components/Header'
+import { HeroLanding } from './components/HeroLanding'
+import { DashboardView } from './components/DashboardView'
+import { RippleSimulator } from './components/RippleSimulator'
+import { TasksManager } from './components/TasksManager'
+import { SettingsView } from './components/SettingsView'
 import { CapacityRadar } from './components/CapacityRadar'
 import { DeadlinesList } from './components/DeadlinesList'
 import { WeekGrid } from './components/WeekGrid'
+import { AICoachDrawer } from './components/AICoachDrawer'
 import { RecoveryModal } from './components/RecoveryModal'
 import { QuickAddModal } from './components/QuickAddModal'
 import { ExportModal } from './components/ExportModal'
@@ -22,6 +29,7 @@ import type {
   StudentPreferences,
   RecoveryProposal,
   DisruptionEvent,
+  DayOfWeek,
 } from './types'
 import {
   AlertTriangle,
@@ -33,14 +41,37 @@ import {
 import { sound } from './utils/sound'
 import confetti from 'canvas-confetti'
 
+interface HistorySnapshot {
+  preferences: StudentPreferences
+  classes: ClassCommitment[]
+  deadlines: AcademicDeadline[]
+  personal: PersonalCommitment[]
+  blocks: ScheduledBlock[]
+}
+
 export function App() {
   const defaultPreset = BLANK_WORKSPACE
 
   const [currentPresetId, setCurrentPresetId] = useState<string>(defaultPreset.id)
-  const [preferences, setPreferences] = useState<StudentPreferences>(defaultPreset.preferences)
+  const [preferences, setPreferences] = useState<StudentPreferences>({
+    ...defaultPreset.preferences,
+    daysOff: [],
+    energyLevel: 'okay',
+    currentDay: 'Mon',
+    calmMode: false,
+    helpDeskEmail: '',
+  })
   const [classes, setClasses] = useState<ClassCommitment[]>(defaultPreset.classes)
   const [deadlines, setDeadlines] = useState<AcademicDeadline[]>(defaultPreset.deadlines)
   const [personal, setPersonal] = useState<PersonalCommitment[]>(defaultPreset.personal)
+
+  // Navigation State
+  const [activeView, setActiveView] = useState<NavView>('dash')
+  const [showHero, setShowHero] = useState<boolean>(false)
+  const [bounceBacks, setBounceBacks] = useState<number>(3)
+
+  // History stack for Undo
+  const [undoStack, setUndoStack] = useState<HistorySnapshot[]>([])
 
   // Calendar blocks
   const [blocks, setBlocks] = useState<ScheduledBlock[]>(() => {
@@ -52,10 +83,11 @@ export function App() {
     )
   })
 
-  // Modals state
+  // Modals & Drawers state
   const [isRecoveryOpen, setIsRecoveryOpen] = useState(false)
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
+  const [isCoachOpen, setIsCoachOpen] = useState(false)
 
   // Focus Mode & Extension Drafter state
   const [activeFocusBlock, setActiveFocusBlock] = useState<ScheduledBlock | null>(null)
@@ -63,10 +95,36 @@ export function App() {
   const [activeExtensionDeadline, setActiveExtensionDeadline] = useState<AcademicDeadline | null>(null)
   const [isExtensionModalOpen, setIsExtensionModalOpen] = useState(false)
 
-  // Keyboard Shortcuts: R -> Recovery, N -> Add, Esc -> Close
+  // Push snapshot before mutating state
+  const pushUndoSnapshot = () => {
+    setUndoStack((prev) => [
+      ...prev.slice(-9),
+      {
+        preferences: { ...preferences },
+        classes: [...classes],
+        deadlines: [...deadlines],
+        personal: [...personal],
+        blocks: [...blocks],
+      },
+    ])
+  }
+
+  const handleUndo = () => {
+    if (undoStack.length === 0) return
+    sound.playClick()
+    const last = undoStack[undoStack.length - 1]
+    setUndoStack((prev) => prev.slice(0, -1))
+
+    setPreferences(last.preferences)
+    setClasses(last.classes)
+    setDeadlines(last.deadlines)
+    setPersonal(last.personal)
+    setBlocks(last.blocks)
+  }
+
+  // Keyboard Shortcuts: R -> Recovery, N -> Add, Esc -> Close, C -> Coach
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if focus is inside an input or textarea
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) {
         return
       }
@@ -79,12 +137,17 @@ export function App() {
         e.preventDefault()
         sound.playClick()
         setIsAddOpen(true)
+      } else if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault()
+        sound.playClick()
+        setIsCoachOpen((prev) => !prev)
       } else if (e.key === 'Escape') {
         setIsRecoveryOpen(false)
         setIsAddOpen(false)
         setIsExportOpen(false)
         setIsFocusModalOpen(false)
         setIsExtensionModalOpen(false)
+        setIsCoachOpen(false)
       }
     }
 
@@ -94,8 +157,9 @@ export function App() {
 
   // Switch preset
   const handleSelectPreset = (preset: PresetScenario) => {
+    pushUndoSnapshot()
     setCurrentPresetId(preset.id)
-    setPreferences(preset.preferences)
+    setPreferences((prev) => ({ ...prev, ...preset.preferences }))
     setClasses(preset.classes)
     setDeadlines(preset.deadlines)
     setPersonal(preset.personal)
@@ -111,6 +175,7 @@ export function App() {
 
   // Toggle complete block
   const handleToggleComplete = (blockId: string) => {
+    pushUndoSnapshot()
     setBlocks((prev) =>
       prev.map((b) => {
         if (b.id === blockId) {
@@ -122,8 +187,29 @@ export function App() {
     )
   }
 
-  // Displace a block manually (life disruption)
+  // Mark block missed (Instant automated reschedule)
+  const handleMarkMissed = (blockId: string) => {
+    pushUndoSnapshot()
+    setBounceBacks((prev) => prev + 1)
+    sound.playAlert()
+
+    // Mark as displaced, then rebalance
+    const nextBlocks = blocks.map((b) =>
+      b.id === blockId ? { ...b, status: 'displaced' as const } : b
+    )
+    setBlocks(nextBlocks)
+
+    setTimeout(() => {
+      sound.playSuccessChime()
+      const rebalanced = generateRealisticPlan(classes, personal, deadlines, preferences)
+      setBlocks(rebalanced)
+      confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 } })
+    }, 300)
+  }
+
+  // Displace a block manually (triggers recovery solver)
   const handleDisplaceBlock = (blockId: string) => {
+    pushUndoSnapshot()
     setBlocks((prev) =>
       prev.map((b) => {
         if (b.id === blockId) {
@@ -135,8 +221,39 @@ export function App() {
     setIsRecoveryOpen(true)
   }
 
+  // Toggle Day Off (e.g. sick day or mental health reset)
+  const handleToggleDayOff = (day: DayOfWeek) => {
+    pushUndoSnapshot()
+    const currentDaysOff = preferences.daysOff || []
+    const nextDaysOff = currentDaysOff.includes(day)
+      ? currentDaysOff.filter((d) => d !== day)
+      : [...currentDaysOff, day]
+
+    const nextPrefs = { ...preferences, daysOff: nextDaysOff }
+    setPreferences(nextPrefs)
+
+    const rebalanced = generateRealisticPlan(classes, personal, deadlines, nextPrefs)
+    setBlocks(rebalanced)
+    sound.playSuccessChime()
+  }
+
+  // Apply revised plan from Ripple Simulator
+  const handleApplyRevisedPlan = (
+    newDeadlines: AcademicDeadline[],
+    newPersonal: PersonalCommitment[]
+  ) => {
+    pushUndoSnapshot()
+    setDeadlines(newDeadlines)
+    setPersonal(newPersonal)
+
+    const rebalanced = generateRealisticPlan(classes, newPersonal, newDeadlines, preferences)
+    setBlocks(rebalanced)
+    setActiveView('plan')
+  }
+
   // Quick 1-Click Inline Disruption Trigger
   const handleQuickInlineDisruption = (type: 'overslept' | 'lab_late' | 'burnout') => {
+    pushUndoSnapshot()
     sound.playAlert()
     let disruption: DisruptionEvent
 
@@ -146,7 +263,7 @@ export function App() {
         type: 'overslept',
         title: 'Overslept Morning',
         description: 'Lost 2.5 hours of morning study time.',
-        day: 'Mon',
+        day: preferences.currentDay || 'Mon',
         timeLostMinutes: 150,
         startDisruptionTime: preferences.wakeTime,
       }
@@ -193,6 +310,7 @@ export function App() {
 
   // Extend sprint duration when taking longer
   const handleExtendSprint = (blockId: string, extraMinutes: number) => {
+    pushUndoSnapshot()
     setBlocks((prev) =>
       prev.map((b) => {
         if (b.id === blockId) {
@@ -211,11 +329,13 @@ export function App() {
 
   // Apply recovery plan proposal
   const handleApplyRecoveryPlan = (proposal: RecoveryProposal) => {
+    pushUndoSnapshot()
     setBlocks(proposal.newProposedBlocks)
   }
 
   // Re-generate fresh plan from scratch
   const handleRebalancePlan = () => {
+    pushUndoSnapshot()
     sound.playSuccessChime()
     const freshBlocks = generateRealisticPlan(classes, personal, deadlines, preferences)
     setBlocks(freshBlocks)
@@ -223,6 +343,7 @@ export function App() {
 
   // Deadline hours completion update
   const handleUpdateCompletedHours = (deadlineId: string, deltaHours: number) => {
+    pushUndoSnapshot()
     setDeadlines((prev) =>
       prev.map((d) => {
         if (d.id === deadlineId) {
@@ -236,27 +357,70 @@ export function App() {
 
   // Add individual items
   const handleAddClass = (newClass: ClassCommitment) => {
+    pushUndoSnapshot()
     const nextClasses = [...classes, newClass]
     setClasses(nextClasses)
     setBlocks(generateRealisticPlan(nextClasses, personal, deadlines, preferences))
   }
 
   const handleAddDeadline = (newDeadline: AcademicDeadline) => {
+    pushUndoSnapshot()
     const nextDeadlines = [...deadlines, newDeadline]
     setDeadlines(nextDeadlines)
     setBlocks(generateRealisticPlan(classes, personal, nextDeadlines, preferences))
   }
 
   const handleAddPersonal = (newPersonal: PersonalCommitment) => {
+    pushUndoSnapshot()
     const nextPersonal = [...personal, newPersonal]
     setPersonal(nextPersonal)
     setBlocks(generateRealisticPlan(classes, nextPersonal, deadlines, preferences))
   }
 
   const handleBatchAddDeadlines = (newDeadlines: AcademicDeadline[]) => {
+    pushUndoSnapshot()
     const nextDeadlines = [...deadlines, ...newDeadlines]
     setDeadlines(nextDeadlines)
     setBlocks(generateRealisticPlan(classes, personal, nextDeadlines, preferences))
+  }
+
+  // Delete items
+  const handleDeleteDeadline = (id: string) => {
+    pushUndoSnapshot()
+    const next = deadlines.filter((d) => d.id !== id)
+    setDeadlines(next)
+    setBlocks(generateRealisticPlan(classes, personal, next, preferences))
+  }
+
+  const handleDeleteClass = (id: string) => {
+    pushUndoSnapshot()
+    const next = classes.filter((c) => c.id !== id)
+    setClasses(next)
+    setBlocks(generateRealisticPlan(next, personal, deadlines, preferences))
+  }
+
+  const handleDeletePersonal = (id: string) => {
+    pushUndoSnapshot()
+    const next = personal.filter((p) => p.id !== id)
+    setPersonal(next)
+    setBlocks(generateRealisticPlan(classes, next, deadlines, preferences))
+  }
+
+  // Update preferences
+  const handleUpdatePreferences = (updated: Partial<StudentPreferences>) => {
+    pushUndoSnapshot()
+    const nextPrefs = { ...preferences, ...updated }
+    setPreferences(nextPrefs)
+    setBlocks(generateRealisticPlan(classes, personal, deadlines, nextPrefs))
+  }
+
+  const handleClearAll = () => {
+    pushUndoSnapshot()
+    setClasses([])
+    setDeadlines([])
+    setPersonal([])
+    setBlocks([])
+    sound.playAlert()
   }
 
   const hasDisplacedBlocks = blocks.some((b) => b.status === 'displaced' || b.status === 'interrupted')
@@ -264,7 +428,10 @@ export function App() {
   const isWorkspaceEmpty = classes.length === 0 && deadlines.length === 0 && personal.length === 0
 
   return (
-    <div className="relative min-h-screen bg-[#030508] text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-sky-200">
+    <div className={`relative min-h-screen bg-[#030508] text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-sky-200 ${
+      preferences.calmMode ? 'calm' : ''
+    }`}>
+      {/* Three.js 3D Spatial Scene */}
       <ThreeCanvas />
       <div className="fixed inset-0 pointer-events-none z-0 film-grain opacity-40" />
 
@@ -273,11 +440,21 @@ export function App() {
         currentPresetId={currentPresetId}
         onSelectPreset={handleSelectPreset}
         metrics={metrics}
+        activeView={activeView}
+        onChangeView={(v) => {
+          setShowHero(false)
+          setActiveView(v)
+        }}
         onOpenRecovery={() => setIsRecoveryOpen(true)}
         onOpenAddModal={() => setIsAddOpen(true)}
         onOpenExportModal={() => setIsExportOpen(true)}
-        onRebalancePlan={handleRebalancePlan}
+        onOpenCoach={() => setIsCoachOpen(true)}
+        onUndo={handleUndo}
+        canUndo={undoStack.length > 0}
+        onToggleHero={() => setShowHero((prev) => !prev)}
+        showHero={showHero}
         hasDisplacedBlocks={hasDisplacedBlocks}
+        onRebalancePlan={handleRebalancePlan}
       />
 
       {/* Displaced Alert Banner if any block needs recovery */}
@@ -303,125 +480,200 @@ export function App() {
         </div>
       )}
 
-      {/* Main Command Center */}
-      <main className="relative z-10 flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-5">
-        {/* Onboarding Callout when Clean */}
-        {isWorkspaceEmpty && (
-          <div className="specular-card rounded-2xl p-6 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="space-y-1 text-center sm:text-left">
-              <div className="inline-flex items-center gap-2 text-xs font-mono text-sky-400 font-semibold uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Clean Academic Workspace</span>
-              </div>
-              <h3 className="text-lg font-bold font-display text-white tracking-tight">
-                Turn your upcoming week of classes & deadlines into a recoverable reality.
-              </h3>
-              <p className="text-xs text-slate-400 max-w-xl">
-                Paste raw syllabus tasks, add fixed lecture times, or load a sample scenario to explore how ChronoFlow protects your sleep and catches up when life happens.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-              <button
-                onClick={() => {
-                  sound.playClick()
-                  setIsAddOpen(true)
-                }}
-                className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold font-mono transition-all cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.25)] flex items-center gap-1.5"
-              >
-                <Plus className="w-4 h-4" />
-                <span>+ Ingest Schedule</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  sound.playClick()
-                  const sample = PRESET_SCENARIOS.find((p) => p.id === 'engineering-midterm')
-                  if (sample) handleSelectPreset(sample)
-                }}
-                className="px-3.5 py-2 rounded-xl bg-[#0e1118] hover:bg-slate-800 border border-white/10 text-slate-300 text-xs font-mono font-medium transition-colors cursor-pointer flex items-center gap-1.5"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-                <span>Load Sample Profile</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Top Capacity & Sanity Guardrails Radar */}
-        <CapacityRadar
+      {/* Primary Content Router */}
+      {showHero ? (
+        <HeroLanding
+          onEnterPlanner={(targetView = 'dash') => {
+            setShowHero(false)
+            setActiveView(targetView)
+          }}
           blocks={blocks}
           deadlines={deadlines}
-          preferences={preferences}
         />
+      ) : (
+        <main className="relative z-10 flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-5">
+          {/* Onboarding Callout when Clean Workspace */}
+          {isWorkspaceEmpty && activeView !== 'set' && (
+            <div className="specular-card rounded-2xl p-6 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="space-y-1 text-center sm:text-left">
+                <div className="inline-flex items-center gap-2 text-xs font-mono text-sky-400 font-semibold uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Clean Academic Workspace</span>
+                </div>
+                <h3 className="text-lg font-bold font-display text-white tracking-tight">
+                  Turn your upcoming week of classes & deadlines into a recoverable reality.
+                </h3>
+                <p className="text-xs text-slate-400 max-w-xl">
+                  Paste raw syllabus tasks, add fixed lecture times, or load a sample scenario to explore how RePlan AI protects your sleep and catches up when life happens.
+                </p>
+              </div>
 
-        {/* Deliverables & Smart Slices */}
-        <DeadlinesList
-          deadlines={deadlines}
-          onUpdateCompletedHours={handleUpdateCompletedHours}
-          onOpenExtensionDraft={handleOpenExtensionDraft}
-          onOpenAddModal={() => setIsAddOpen(true)}
-        />
-
-        {/* 7-Day Responsive Weekly Timeline */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-            <div>
-              <h3 className="text-xs font-mono font-bold tracking-wider uppercase text-slate-200 flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                Adaptive Weekly Matrix
-              </h3>
-              <p className="text-xs text-slate-400">
-                Click any study sprint to launch Focus Mode · Press [R] for Recovery
-              </p>
-            </div>
-
-            {/* Quick 1-Click Disruption Pill Sandbox (If blocks exist) */}
-            {blocks.length > 0 && (
-              <div className="flex items-center gap-1.5 text-[11px] font-mono bg-[#0c0e14] border border-white/10 p-1 rounded-xl">
-                <span className="text-slate-400 px-2 flex items-center gap-1">
-                  <Zap className="w-3 h-3 text-amber-400" />
-                  Quick Disruption:
-                </span>
+              <div className="flex flex-wrap items-center gap-2.5 shrink-0">
                 <button
-                  onClick={() => handleQuickInlineDisruption('overslept')}
-                  className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
-                  title="Simulate losing 2.5h this morning"
+                  onClick={() => {
+                    sound.playClick()
+                    setIsAddOpen(true)
+                  }}
+                  className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold font-mono transition-all cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.25)] flex items-center gap-1.5"
                 >
-                  Slept In +2.5h
+                  <Plus className="w-4 h-4" />
+                  <span>+ Ingest Schedule</span>
                 </button>
+
                 <button
-                  onClick={() => handleQuickInlineDisruption('lab_late')}
-                  className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
-                  title="Simulate lab running late"
+                  onClick={() => {
+                    sound.playClick()
+                    const sample = PRESET_SCENARIOS.find((p) => p.id === 'engineering-midterm')
+                    if (sample) handleSelectPreset(sample)
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-[#0e1118] hover:bg-slate-800 border border-white/10 text-slate-300 text-xs font-mono font-medium transition-colors cursor-pointer flex items-center gap-1.5"
                 >
-                  Lab Overrun +1.5h
-                </button>
-                <button
-                  onClick={() => handleQuickInlineDisruption('burnout')}
-                  className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
-                  title="Drop tonight to rest"
-                >
-                  Night Reset
+                  <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Load Sample Profile</span>
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          <WeekGrid
-            blocks={blocks}
-            preferences={preferences}
-            onToggleComplete={handleToggleComplete}
-            onDisplaceBlock={handleDisplaceBlock}
-            onOpenFocusMode={handleOpenFocusMode}
-          />
-        </div>
-      </main>
+          {/* View 1: Dashboard */}
+          {activeView === 'dash' && (
+            <DashboardView
+              blocks={blocks}
+              deadlines={deadlines}
+              preferences={preferences}
+              bounceBacks={bounceBacks}
+              onToggleComplete={handleToggleComplete}
+              onMarkMissed={handleMarkMissed}
+              onOpenFocusMode={handleOpenFocusMode}
+              onOpenAddModal={() => setIsAddOpen(true)}
+            />
+          )}
+
+          {/* View 2: Week Planner Matrix */}
+          {activeView === 'plan' && (
+            <div className="space-y-6">
+              <CapacityRadar
+                blocks={blocks}
+                deadlines={deadlines}
+                preferences={preferences}
+              />
+
+              <DeadlinesList
+                deadlines={deadlines}
+                onUpdateCompletedHours={handleUpdateCompletedHours}
+                onOpenExtensionDraft={handleOpenExtensionDraft}
+                onOpenAddModal={() => setIsAddOpen(true)}
+              />
+
+              {/* Quick Shock Testing Strip */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#06080e]/90 border border-white/[0.08] text-xs font-mono">
+                <div className="flex items-center gap-2 text-slate-400">
+                  <Zap className="w-4 h-4 text-amber-400" />
+                  <span>Quick Schedule Shock Test:</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleQuickInlineDisruption('overslept')}
+                    className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                    title="Simulate losing morning study"
+                  >
+                    Overslept (-2.5h)
+                  </button>
+                  <button
+                    onClick={() => handleQuickInlineDisruption('lab_late')}
+                    className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                    title="Simulate afternoon lab overrun"
+                  >
+                    Lab Overrun (-1.5h)
+                  </button>
+                  <button
+                    onClick={() => handleQuickInlineDisruption('burnout')}
+                    className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                    title="Drop tonight to rest"
+                  >
+                    Night Reset
+                  </button>
+                </div>
+              </div>
+
+              <WeekGrid
+                blocks={blocks}
+                preferences={preferences}
+                onToggleComplete={handleToggleComplete}
+                onDisplaceBlock={handleDisplaceBlock}
+                onOpenFocusMode={handleOpenFocusMode}
+                onToggleDayOff={handleToggleDayOff}
+              />
+            </div>
+          )}
+
+          {/* View 3: Ripple Simulator */}
+          {activeView === 'sim' && (
+            <RippleSimulator
+              classes={classes}
+              personal={personal}
+              deadlines={deadlines}
+              preferences={preferences}
+              onApplyRevisedPlan={handleApplyRevisedPlan}
+            />
+          )}
+
+          {/* View 4: Tasks & Commitments */}
+          {activeView === 'tasks' && (
+            <TasksManager
+              deadlines={deadlines}
+              classes={classes}
+              personal={personal}
+              onOpenAddModal={() => setIsAddOpen(true)}
+              onDeleteDeadline={handleDeleteDeadline}
+              onDeleteClass={handleDeleteClass}
+              onDeletePersonal={handleDeletePersonal}
+            />
+          )}
+
+          {/* View 5: Settings & Limits */}
+          {activeView === 'set' && (
+            <SettingsView
+              preferences={preferences}
+              onUpdatePreferences={handleUpdatePreferences}
+              onLoadSampleWeek={() => {
+                const sample = PRESET_SCENARIOS[0]
+                if (sample) handleSelectPreset(sample)
+              }}
+              onClearAll={handleClearAll}
+            />
+          )}
+        </main>
+      )}
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/5 bg-[#060709]/80 backdrop-blur-md py-4 px-4 text-center text-xs text-slate-500 font-mono">
-        ChronoFlow · Academic Week Resilience & Autonomous Recovery Engine · Zero AI Slop
+      <footer className="relative z-10 border-t border-white/[0.08] bg-[#050812]/80 backdrop-blur-md py-4 px-4 text-center text-xs text-slate-500 font-mono">
+        RePlan AI · Your Life Changes. Your Plan Adapts. · Deterministic Recovery Math
       </footer>
+
+      {/* AI Coach & Campus Support Drawer */}
+      <AICoachDrawer
+        isOpen={isCoachOpen}
+        onClose={() => setIsCoachOpen(false)}
+        deadlines={deadlines}
+        preferences={preferences}
+        onToggleDayOff={handleToggleDayOff}
+        onSetStudyLimit={(hours) => handleUpdatePreferences({ maxDailyDeepWorkHours: hours })}
+        onAddQuickDeadline={(title, dueDay, hours) => {
+          handleAddDeadline({
+            id: `dl-${Date.now()}`,
+            courseCode: 'ACAD',
+            title,
+            dueDay,
+            dueTime: '23:59',
+            estimatedHours: hours,
+            completedHours: 0,
+            priority: 'high',
+            energyRequirement: 'deep_work',
+            weightPercentage: 15,
+          })
+        }}
+      />
 
       {/* Modals */}
       <RecoveryModal
@@ -468,4 +720,5 @@ export function App() {
     </div>
   )
 }
+
 export default App

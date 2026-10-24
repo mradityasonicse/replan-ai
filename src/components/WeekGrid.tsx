@@ -1,5 +1,5 @@
 import React from 'react'
-import type { ScheduledBlock, StudentPreferences } from '../types'
+import type { DayOfWeek, ScheduledBlock, StudentPreferences } from '../types'
 import { DAYS_OF_WEEK } from '../types'
 import { DayColumn } from './DayColumn'
 
@@ -9,6 +9,7 @@ interface WeekGridProps {
   onToggleComplete: (blockId: string) => void
   onDisplaceBlock: (blockId: string) => void
   onOpenFocusMode?: (block: ScheduledBlock) => void
+  onToggleDayOff?: (day: DayOfWeek) => void
 }
 
 export const WeekGrid: React.FC<WeekGridProps> = ({
@@ -17,6 +18,7 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
   onToggleComplete,
   onDisplaceBlock,
   onOpenFocusMode,
+  onToggleDayOff,
 }) => {
   return (
     <div className="w-full">
@@ -27,6 +29,8 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
             day={day}
             blocks={blocks}
             preferences={preferences}
+            isDayOff={preferences.daysOff?.includes(day)}
+            onToggleDayOff={onToggleDayOff}
             onToggleComplete={onToggleComplete}
             onDisplaceBlock={onDisplaceBlock}
             onOpenFocusMode={onOpenFocusMode}

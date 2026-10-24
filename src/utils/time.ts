@@ -1,7 +1,8 @@
 import type { DayOfWeek } from '../types'
 import { DAYS_OF_WEEK } from '../types'
 
-export function timeToMinutes(timeStr: string): number {
+export function timeToMinutes(timeStr?: string): number {
+  if (!timeStr || typeof timeStr !== 'string') return 0
   const [hoursStr, minutesStr] = timeStr.split(':')
   const hours = parseInt(hoursStr, 10) || 0
   const minutes = parseInt(minutesStr, 10) || 0
@@ -15,7 +16,8 @@ export function minutesToTime(minutes: number): string {
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
 }
 
-export function formatTimeDisplay(timeStr: string): string {
+export function formatTimeDisplay(timeStr?: string): string {
+  if (!timeStr || typeof timeStr !== 'string') return '12:00 PM'
   const [hStr, mStr] = timeStr.split(':')
   let hours = parseInt(hStr, 10) || 0
   const minutes = mStr || '00'

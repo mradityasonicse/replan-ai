@@ -69,6 +69,38 @@ export interface StudentPreferences {
   peakEnergy: 'morning' | 'afternoon' | 'evening'
   bufferMinutes: number // 15
   maxDailyDeepWorkHours: number // 6.5
+  daysOff?: DayOfWeek[]
+  energyLevel?: 'drained' | 'okay' | 'fresh'
+  currentDay?: DayOfWeek
+  calmMode?: boolean
+  helpDeskEmail?: string
+}
+
+export interface CausalMove {
+  taskTitle: string
+  from: string
+  to: string
+  reason: string
+}
+
+export interface DeadlineShortfall {
+  deadlineId: string
+  taskTitle: string
+  unplacedHours: number
+  dueDay: DayOfWeek
+  isNew: boolean
+}
+
+export interface RippleSimulation {
+  disruptionType: 'lost' | 'task'
+  disruptionSummary: string
+  originalBlocks: ScheduledBlock[]
+  revisedBlocks: ScheduledBlock[]
+  movedBlockKeys: Set<string>
+  newBlockKeys: Set<string>
+  moves: CausalMove[]
+  conflicts: DeadlineShortfall[]
+  affectedDay: DayOfWeek
 }
 
 export interface DayCapacity {
