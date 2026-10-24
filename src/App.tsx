@@ -9,7 +9,7 @@ import { ExportModal } from './components/ExportModal'
 import { FocusModeModal } from './components/FocusModeModal'
 import { ExtensionEmailModal } from './components/ExtensionEmailModal'
 import { BackgroundCanvas } from './components/BackgroundCanvas'
-import { PRESET_SCENARIOS } from './utils/presets'
+import { BLANK_WORKSPACE, PRESET_SCENARIOS } from './utils/presets'
 import type { PresetScenario } from './utils/presets'
 import { generateRealisticPlan } from './utils/scheduler'
 import { computeWeekCapacityMetrics } from './utils/capacity'
@@ -21,11 +21,12 @@ import type {
   StudentPreferences,
   RecoveryProposal,
 } from './types'
-import { AlertTriangle, Sparkles } from 'lucide-react'
+import { AlertTriangle, Sparkles, Plus, BookOpen } from 'lucide-react'
 import { sound } from './utils/sound'
 
 export function App() {
-  const defaultPreset = PRESET_SCENARIOS[0]
+  // Starts completely empty with zero demo data
+  const defaultPreset = BLANK_WORKSPACE
 
   const [currentPresetId, setCurrentPresetId] = useState<string>(defaultPreset.id)
   const [preferences, setPreferences] = useState<StudentPreferences>(defaultPreset.preferences)
@@ -173,6 +174,7 @@ export function App() {
 
   const hasDisplacedBlocks = blocks.some((b) => b.status === 'displaced' || b.status === 'interrupted')
   const metrics = computeWeekCapacityMetrics(blocks, deadlines, preferences)
+  const isWorkspaceEmpty = classes.length === 0 && deadlines.length === 0 && personal.length === 0
 
   return (
     <div className="relative min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-sky-200">
@@ -215,6 +217,49 @@ export function App() {
 
       {/* Main Content Area */}
       <main className="relative z-10 flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-6">
+        {/* Onboarding Welcome Callout if Workspace is Clean */}
+        {isWorkspaceEmpty && (
+          <div className="mb-6 p-6 rounded-2xl bg-gradient-to-r from-sky-950/40 via-slate-900/80 to-indigo-950/40 border border-sky-500/20 shadow-xl backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-center sm:text-left">
+              <div className="inline-flex items-center gap-2 text-xs font-mono text-sky-400 font-semibold uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Clean Academic Workspace</span>
+              </div>
+              <h3 className="text-base font-bold text-white">
+                Turn your upcoming week of classes & deadlines into a recoverable reality.
+              </h3>
+              <p className="text-xs text-slate-400 max-w-xl">
+                Start by pasting raw syllabus lines, adding fixed lecture times, or load a sample scenario to explore how ChronoFlow protects your sleep and catches up when life happens.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <button
+                onClick={() => {
+                  sound.playClick()
+                  setIsAddOpen(true)
+                }}
+                className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold transition-all cursor-pointer shadow-lg shadow-sky-500/25 flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Ingest / Add Schedule</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  sound.playClick()
+                  const sample = PRESET_SCENARIOS.find((p) => p.id === 'engineering-midterm')
+                  if (sample) handleSelectPreset(sample)
+                }}
+                className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+                <span>Load Sample Profile</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Top Capacity & Sanity Guardrails Radar */}
         <CapacityRadar
           blocks={blocks}
@@ -227,6 +272,7 @@ export function App() {
           deadlines={deadlines}
           onUpdateCompletedHours={handleUpdateCompletedHours}
           onOpenExtensionDraft={handleOpenExtensionDraft}
+          onOpenAddModal={() => setIsAddOpen(true)}
         />
 
         {/* 7-Day Responsive Weekly Timeline */}

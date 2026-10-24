@@ -38,35 +38,34 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'nlp' | 'deadline' | 'class' | 'personal'>('nlp')
 
-  // Natural Language Ingestion State
-  const [nlpText, setNlpText] = useState<string>(
-    `CS 350 Operating Systems Lab 2 due Friday 11:59pm 5 hours\nMATH 300 Proofs Homework due Wednesday 4pm 3.5 hours\nPHYS 150 Problem Set due Thursday 23:59 2.5 hours`
-  )
+  // Natural Language Ingestion State (Empty by default)
+  const [nlpText, setNlpText] = useState<string>('')
 
   // Manual Deadline State
-  const [courseCode, setCourseCode] = useState('CS 210')
+  const [courseCode, setCourseCode] = useState('')
   const [deadlineTitle, setDeadlineTitle] = useState('')
   const [dueDay, setDueDay] = useState<DayOfWeek>('Fri')
   const [dueTime, setDueTime] = useState('23:59')
-  const [estimatedHours, setEstimatedHours] = useState(4.0)
+  const [estimatedHours, setEstimatedHours] = useState(3.0)
   const [priority, setPriority] = useState<'critical' | 'high' | 'medium' | 'low'>('high')
 
   // Manual Class State
-  const [classCode, setClassCode] = useState('MATH 240')
-  const [className, setClassName] = useState('Linear Algebra')
-  const [classDay, setClassDay] = useState<DayOfWeek>('Tue')
-  const [classStart, setClassStart] = useState('10:00')
-  const [classEnd, setClassEnd] = useState('11:30')
+  const [classCode, setClassCode] = useState('')
+  const [className, setClassName] = useState('')
+  const [classDay, setClassDay] = useState<DayOfWeek>('Mon')
+  const [classStart, setClassStart] = useState('09:00')
+  const [classEnd, setClassEnd] = useState('10:30')
   const [isLab, setIsLab] = useState(false)
 
   // Manual Personal State
-  const [personalTitle, setPersonalTitle] = useState('Gym Workout')
-  const [personalDay, setPersonalDay] = useState<DayOfWeek>('Mon')
+  const [personalTitle, setPersonalTitle] = useState('')
+  const [personalDay, setPersonalDay] = useState<DayOfWeek>('Tue')
   const [personalStart, setPersonalStart] = useState('18:00')
-  const [personalEnd, setPersonalEnd] = useState('19:15')
+  const [personalEnd, setPersonalEnd] = useState('19:30')
   const [flexibility, setFlexibility] = useState<'immovable' | 'flexible' | 'skippable'>('flexible')
 
   const handleParseNlp = () => {
+    if (!nlpText.trim()) return
     sound.playSuccessChime()
     const parsed = parseNaturalLanguageDeadlines(nlpText)
     const validDeadlines: AcademicDeadline[] = parsed.map((p, idx) => ({
@@ -82,15 +81,17 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
       weightPercentage: p.weightPercentage || 15,
     }))
     onBatchAddDeadlines(validDeadlines)
+    setNlpText('')
     onClose()
   }
 
   const handleCreateDeadline = () => {
+    if (!deadlineTitle.trim()) return
     sound.playComplete()
     onAddDeadline({
       id: `dl-${Date.now()}`,
-      courseCode,
-      title: deadlineTitle || `${courseCode} Assignment`,
+      courseCode: courseCode.trim() || 'ACAD',
+      title: deadlineTitle.trim(),
       dueDay,
       dueTime,
       estimatedHours,
@@ -99,29 +100,34 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
       energyRequirement: 'deep_work',
       weightPercentage: 15,
     })
+    setDeadlineTitle('')
     onClose()
   }
 
   const handleCreateClass = () => {
+    if (!classCode.trim()) return
     sound.playComplete()
     onAddClass({
       id: `cls-${Date.now()}`,
-      courseCode: classCode,
-      courseName: className,
+      courseCode: classCode.trim().toUpperCase(),
+      courseName: className.trim() || classCode.trim(),
       dayOfWeek: classDay,
       startTime: classStart,
       endTime: classEnd,
       isLab,
       color: '#0ea5e9',
     })
+    setClassCode('')
+    setClassName('')
     onClose()
   }
 
   const handleCreatePersonal = () => {
+    if (!personalTitle.trim()) return
     sound.playComplete()
     onAddPersonal({
       id: `per-${Date.now()}`,
-      title: personalTitle,
+      title: personalTitle.trim(),
       dayOfWeek: personalDay,
       startTime: personalStart,
       endTime: personalEnd,
@@ -129,6 +135,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
       category: 'health',
       color: '#64748b',
     })
+    setPersonalTitle('')
     onClose()
   }
 
@@ -215,18 +222,19 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
             {activeTab === 'nlp' && (
               <div className="space-y-3">
                 <div className="text-xs text-slate-300">
-                  Paste WhatsApp messages, syllabus tasks, or homework reminders. Our intelligent parser automatically extracts course codes, deadlines, estimated hours, and slices them into your week:
+                  Paste raw WhatsApp messages, syllabus tasks, or homework reminders. The parser extracts course codes, deadlines, and estimated hours, and auto-slices them into your week:
                 </div>
                 <textarea
                   rows={5}
                   value={nlpText}
                   onChange={(e) => setNlpText(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs font-mono text-slate-200 focus:outline-none focus:border-sky-500"
-                  placeholder="Paste syllabus lines..."
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs font-mono text-slate-200 focus:outline-none focus:border-sky-500 placeholder:text-slate-600"
+                  placeholder={`Example format:\nCS 210 Lab Report 3 due Friday 11:59pm 4.5 hours\nMATH 240 Problem Set 5 due Wednesday 5:00pm 3 hours\nBiology Essay due Thursday 2pm 5 hours`}
                 />
                 <button
                   onClick={handleParseNlp}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-sky-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  disabled={!nlpText.trim()}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-sky-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>Parse & Auto-Slice Into Week</span>
@@ -247,7 +255,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                       value={courseCode}
                       onChange={(e) => setCourseCode(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white"
-                      placeholder="e.g. CS 210"
+                      placeholder="e.g. CS 101"
                     />
                   </div>
                   <div>
@@ -276,7 +284,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                     value={deadlineTitle}
                     onChange={(e) => setDeadlineTitle(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white"
-                    placeholder="e.g. Problem Set 4"
+                    placeholder="e.g. Problem Set 2"
                   />
                 </div>
 
@@ -325,7 +333,8 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
 
                 <button
                   onClick={handleCreateDeadline}
-                  className="w-full mt-2 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold transition-all cursor-pointer"
+                  disabled={!deadlineTitle.trim()}
+                  className="w-full mt-2 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-white text-xs font-bold transition-all cursor-pointer"
                 >
                   Create & Schedule Deliverable
                 </button>
@@ -345,6 +354,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                       value={classCode}
                       onChange={(e) => setClassCode(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white"
+                      placeholder="e.g. MATH 101"
                     />
                   </div>
                   <div>
@@ -356,6 +366,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                       value={className}
                       onChange={(e) => setClassName(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white"
+                      placeholder="e.g. Calculus I"
                     />
                   </div>
                 </div>
@@ -416,7 +427,8 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
 
                 <button
                   onClick={handleCreateClass}
-                  className="w-full mt-2 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold transition-all cursor-pointer"
+                  disabled={!classCode.trim()}
+                  className="w-full mt-2 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-white text-xs font-bold transition-all cursor-pointer"
                 >
                   Add Fixed Class
                 </button>
@@ -435,6 +447,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                     value={personalTitle}
                     onChange={(e) => setPersonalTitle(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white"
+                    placeholder="e.g. Work Shift, Gym, Club"
                   />
                 </div>
 
@@ -496,7 +509,8 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
 
                 <button
                   onClick={handleCreatePersonal}
-                  className="w-full mt-2 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold transition-all cursor-pointer"
+                  disabled={!personalTitle.trim()}
+                  className="w-full mt-2 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-white text-xs font-bold transition-all cursor-pointer"
                 >
                   Add Personal Commitment
                 </button>

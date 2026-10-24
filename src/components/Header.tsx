@@ -8,7 +8,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import type { WeekCapacityMetrics } from '../types'
-import { PRESET_SCENARIOS } from '../utils/presets'
+import { PRESET_SCENARIOS, BLANK_WORKSPACE } from '../utils/presets'
 import type { PresetScenario } from '../utils/presets'
 import { sound } from '../utils/sound'
 
@@ -34,6 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
   hasDisplacedBlocks,
 }) => {
   const isBurnoutHigh = metrics.overallBurnoutIndex >= 60
+  const allProfiles = [BLANK_WORKSPACE, ...PRESET_SCENARIOS]
 
   return (
     <header className="relative z-10 border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-md px-4 lg:px-8 py-3.5">
@@ -67,14 +68,14 @@ export const Header: React.FC<HeaderProps> = ({
               value={currentPresetId}
               onChange={(e) => {
                 sound.playClick()
-                const found = PRESET_SCENARIOS.find((p) => p.id === e.target.value)
+                const found = allProfiles.find((p) => p.id === e.target.value)
                 if (found) onSelectPreset(found)
               }}
               className="bg-slate-900 text-slate-200 text-xs font-medium border border-slate-700/80 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-sky-500 transition-colors cursor-pointer"
             >
-              {PRESET_SCENARIOS.map((p) => (
+              {allProfiles.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} ({p.role.split(' ')[0]})
+                  {p.name}
                 </option>
               ))}
             </select>
