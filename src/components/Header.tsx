@@ -11,6 +11,7 @@ import {
   Sliders,
   Home,
   RefreshCw,
+  Cpu,
 } from 'lucide-react'
 import type { WeekCapacityMetrics } from '../types'
 import { PRESET_SCENARIOS, BLANK_WORKSPACE } from '../utils/presets'
@@ -35,6 +36,7 @@ interface HeaderProps {
   showHero: boolean
   hasDisplacedBlocks: boolean
   onRebalancePlan?: () => void
+  onOpenStudio?: () => void
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -53,6 +55,7 @@ export const Header: React.FC<HeaderProps> = ({
   showHero,
   hasDisplacedBlocks,
   onRebalancePlan,
+  onOpenStudio,
 }) => {
   const allProfiles = [BLANK_WORKSPACE, ...PRESET_SCENARIOS]
 
@@ -196,6 +199,21 @@ export const Header: React.FC<HeaderProps> = ({
             <MessageSquare className="w-3.5 h-3.5 text-sky-400" />
             <span>AI Coach</span>
           </button>
+
+          {/* AI Engineering Studio Button */}
+          {onOpenStudio && (
+            <button
+              onClick={() => {
+                sound.playClick()
+                onOpenStudio()
+              }}
+              className="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+              title="Open RAG, Agent Memory, Context & Evals Studio"
+            >
+              <Cpu className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
+              <span className="hidden sm:inline">AI Studio</span>
+            </button>
+          )}
 
           {/* Life Happened / Recovery Button */}
           <button

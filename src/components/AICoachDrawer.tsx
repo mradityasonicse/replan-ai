@@ -7,8 +7,11 @@ import {
   Send,
   Mail,
   ExternalLink,
+  Cpu,
 } from 'lucide-react'
 import { sound } from '../utils/sound'
+import { ragEngine } from '../utils/ai/ragEngine'
+import { agentMemory } from '../utils/ai/memory'
 import type { AcademicDeadline, StudentPreferences, DayOfWeek } from '../types'
 
 interface AICoachDrawerProps {
@@ -19,6 +22,7 @@ interface AICoachDrawerProps {
   onToggleDayOff: (day: DayOfWeek) => void
   onSetStudyLimit: (hours: number) => void
   onAddQuickDeadline: (title: string, dueDay: DayOfWeek, hours: number) => void
+  onOpenStudio?: () => void
 }
 
 interface Message {
@@ -34,6 +38,7 @@ export const AICoachDrawer: React.FC<AICoachDrawerProps> = ({
   onToggleDayOff,
   onSetStudyLimit,
   onAddQuickDeadline,
+  onOpenStudio,
 }) => {
   const [activeTab, setActiveTab] = useState<'coach' | 'inperson'>('coach')
   const [inputMessage, setInputMessage] = useState('')
@@ -54,8 +59,10 @@ export const AICoachDrawer: React.FC<AICoachDrawerProps> = ({
 
   const quickPrompts = [
     "I'm behind on everything",
+    'Can I get an extension on CS101?',
     'Make Tuesday a day off',
     'Add a 4h project due Friday',
+    'What is the Math201 drop policy?',
     'Increase study limit by 1h',
   ]
 
@@ -68,11 +75,21 @@ export const AICoachDrawer: React.FC<AICoachDrawerProps> = ({
     setInputMessage('')
     setMessages(newMsgs)
 
-    // Smart Schedule-Aware Heuristic
+    // Record to Agent Memory
+    agentMemory.write(`session-query-${Date.now()}`, text, 'working', ['chat', 'coach-query'], 2)
+
+    // Smart Schedule-Aware Heuristic + RAG Grounding + Agent Memory Recall
     setTimeout(() => {
       sound.playComplete()
       let reply = ''
       const lower = text.toLowerCase()
+
+      // Query RAG Knowledge Base
+      const ragHit = ragEngine.queryKnowledgeBase(text)
+
+      // Query Agent Memory for student habits/history
+      const memHits = agentMemory.search(text)
+      const relevantMemory = memHits.length > 0 && memHits[0].importance >= 3 ? memHits[0] : null
 
       if (lower.includes('behind') || lower.includes('overwhelmed')) {
         const totalHours = deadlines.reduce((a, d) => a + (d.estimatedHours - d.completedHours), 0)
@@ -86,8 +103,16 @@ export const AICoachDrawer: React.FC<AICoachDrawerProps> = ({
       } else if (lower.includes('limit') || lower.includes('increase study limit')) {
         onSetStudyLimit(preferences.maxDailyDeepWorkHours + 1)
         reply = `Daily study limit increased to ${preferences.maxDailyDeepWorkHours + 1}h. The planner has redistributed your workload with greater flexibility.`
+      } else if (ragHit.confidence >= 0.25 && ragHit.citations.length > 0) {
+        // Grounded directly in course syllabus via RAG
+        reply = `${ragHit.groundedAnswer}\n\n📚 Grounded citation: ${ragHit.citations.join(', ')}`
       } else {
         reply = `I evaluated your schedule with ${preferences.maxDailyDeepWorkHours}h/day limit. All fixed lecture blocks and your ${preferences.targetSleepHours}h sleep target are protected. Use the Ripple Simulator to preview any upcoming shock.`
+      }
+
+      // Weave in relevant episodic / semantic memory if detected
+      if (relevantMemory) {
+        reply += `\n\n🧠 Note from past patterns: "${relevantMemory.content}"`
       }
 
       setMessages([...newMsgs, { role: 'assistant', content: reply }])
@@ -157,15 +182,30 @@ Student`
                 Adaptive
               </span>
             </div>
-            <button
-              onClick={() => {
-                sound.playClick()
-                onClose()
-              }}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer border border-white/5"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              {onOpenStudio && (
+                <button
+                  onClick={() => {
+                    sound.playClick()
+                    onOpenStudio()
+                  }}
+                  className="px-2 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[10px] font-mono flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Open Agent Intelligence & RAG Studio"
+                >
+                  <Cpu className="w-3 h-3" />
+                  <span>AI Studio</span>
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  sound.playClick()
+                  onClose()
+                }}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer border border-white/5"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Navigation Tabs */}

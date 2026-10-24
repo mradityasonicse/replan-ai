@@ -15,6 +15,7 @@ import { QuickAddModal } from './components/QuickAddModal'
 import { ExportModal } from './components/ExportModal'
 import { FocusModeModal } from './components/FocusModeModal'
 import { ExtensionEmailModal } from './components/ExtensionEmailModal'
+import { AIEngineeringModal } from './components/AIEngineeringModal'
 import { ThreeCanvas } from './components/ThreeCanvas'
 import { BLANK_WORKSPACE, PRESET_SCENARIOS } from './utils/presets'
 import type { PresetScenario } from './utils/presets'
@@ -88,6 +89,7 @@ export function App() {
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isCoachOpen, setIsCoachOpen] = useState(false)
+  const [isStudioOpen, setIsStudioOpen] = useState(false)
 
   // Focus Mode & Extension Drafter state
   const [activeFocusBlock, setActiveFocusBlock] = useState<ScheduledBlock | null>(null)
@@ -141,6 +143,10 @@ export function App() {
         e.preventDefault()
         sound.playClick()
         setIsCoachOpen((prev) => !prev)
+      } else if (e.key === 's' || e.key === 'S') {
+        e.preventDefault()
+        sound.playClick()
+        setIsStudioOpen((prev) => !prev)
       } else if (e.key === 'Escape') {
         setIsRecoveryOpen(false)
         setIsAddOpen(false)
@@ -148,6 +154,7 @@ export function App() {
         setIsFocusModalOpen(false)
         setIsExtensionModalOpen(false)
         setIsCoachOpen(false)
+        setIsStudioOpen(false)
       }
     }
 
@@ -455,6 +462,7 @@ export function App() {
         showHero={showHero}
         hasDisplacedBlocks={hasDisplacedBlocks}
         onRebalancePlan={handleRebalancePlan}
+        onOpenStudio={() => setIsStudioOpen(true)}
       />
 
       {/* Displaced Alert Banner if any block needs recovery */}
@@ -673,6 +681,7 @@ export function App() {
             weightPercentage: 15,
           })
         }}
+        onOpenStudio={() => setIsStudioOpen(true)}
       />
 
       {/* Modals */}
@@ -716,6 +725,17 @@ export function App() {
         isOpen={isExtensionModalOpen}
         onClose={() => setIsExtensionModalOpen(false)}
         deadline={activeExtensionDeadline}
+      />
+
+      {/* Full Stack AI Engineering Studio (RAG, Agent Memory, Context, Harness, Evals) */}
+      <AIEngineeringModal
+        isOpen={isStudioOpen}
+        onClose={() => setIsStudioOpen(false)}
+        blocks={blocks}
+        deadlines={deadlines}
+        classes={classes}
+        personal={personal}
+        preferences={preferences}
       />
     </div>
   )
