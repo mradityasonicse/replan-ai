@@ -16,6 +16,7 @@ import { ExportModal } from './components/ExportModal'
 import { FocusModeModal } from './components/FocusModeModal'
 import { ExtensionEmailModal } from './components/ExtensionEmailModal'
 import { AIEngineeringModal } from './components/AIEngineeringModal'
+import { GodModeHubModal } from './components/GodModeHubModal'
 import { ThreeCanvas } from './components/ThreeCanvas'
 import { BLANK_WORKSPACE, PRESET_SCENARIOS } from './utils/presets'
 import type { PresetScenario } from './utils/presets'
@@ -90,6 +91,7 @@ export function App() {
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isCoachOpen, setIsCoachOpen] = useState(false)
   const [isStudioOpen, setIsStudioOpen] = useState(false)
+  const [isGodModeOpen, setIsGodModeOpen] = useState(false)
 
   // Focus Mode & Extension Drafter state
   const [activeFocusBlock, setActiveFocusBlock] = useState<ScheduledBlock | null>(null)
@@ -147,6 +149,10 @@ export function App() {
         e.preventDefault()
         sound.playClick()
         setIsStudioOpen((prev) => !prev)
+      } else if (e.key === 'g' || e.key === 'G') {
+        e.preventDefault()
+        sound.playClick()
+        setIsGodModeOpen((prev) => !prev)
       } else if (e.key === 'Escape') {
         setIsRecoveryOpen(false)
         setIsAddOpen(false)
@@ -155,6 +161,7 @@ export function App() {
         setIsExtensionModalOpen(false)
         setIsCoachOpen(false)
         setIsStudioOpen(false)
+        setIsGodModeOpen(false)
       }
     }
 
@@ -463,6 +470,7 @@ export function App() {
         hasDisplacedBlocks={hasDisplacedBlocks}
         onRebalancePlan={handleRebalancePlan}
         onOpenStudio={() => setIsStudioOpen(true)}
+        onOpenGodMode={() => setIsGodModeOpen(true)}
       />
 
       {/* Displaced Alert Banner if any block needs recovery */}
@@ -682,6 +690,7 @@ export function App() {
           })
         }}
         onOpenStudio={() => setIsStudioOpen(true)}
+        onOpenGodMode={() => setIsGodModeOpen(true)}
       />
 
       {/* Modals */}
@@ -736,6 +745,14 @@ export function App() {
         classes={classes}
         personal={personal}
         preferences={preferences}
+      />
+
+      {/* God-Mode Senior Engineer Architecture & 32 Repositories Hub */}
+      <GodModeHubModal
+        isOpen={isGodModeOpen}
+        onClose={() => setIsGodModeOpen(false)}
+        blocks={blocks}
+        deadlines={deadlines}
       />
     </div>
   )

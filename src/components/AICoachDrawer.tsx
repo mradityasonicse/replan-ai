@@ -8,6 +8,7 @@ import {
   Mail,
   ExternalLink,
   Cpu,
+  Zap,
 } from 'lucide-react'
 import { sound } from '../utils/sound'
 import { ragEngine } from '../utils/ai/ragEngine'
@@ -23,6 +24,7 @@ interface AICoachDrawerProps {
   onSetStudyLimit: (hours: number) => void
   onAddQuickDeadline: (title: string, dueDay: DayOfWeek, hours: number) => void
   onOpenStudio?: () => void
+  onOpenGodMode?: () => void
 }
 
 interface Message {
@@ -39,6 +41,7 @@ export const AICoachDrawer: React.FC<AICoachDrawerProps> = ({
   onSetStudyLimit,
   onAddQuickDeadline,
   onOpenStudio,
+  onOpenGodMode,
 }) => {
   const [activeTab, setActiveTab] = useState<'coach' | 'inperson'>('coach')
   const [inputMessage, setInputMessage] = useState('')
@@ -194,6 +197,19 @@ Student`
                 >
                   <Cpu className="w-3 h-3" />
                   <span>AI Studio</span>
+                </button>
+              )}
+              {onOpenGodMode && (
+                <button
+                  onClick={() => {
+                    sound.playClick()
+                    onOpenGodMode()
+                  }}
+                  className="px-2 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-[10px] font-mono flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Open 32 Repositories & God-Mode Architecture Hub"
+                >
+                  <Zap className="w-3 h-3 text-amber-400" />
+                  <span>God-Mode</span>
                 </button>
               )}
               <button
