@@ -95,12 +95,12 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-xl">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-2xl">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          className="relative w-full max-w-2xl text-center p-6 sm:p-10 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-2xl flex flex-col items-center"
+          initial={{ opacity: 0, scale: 0.92, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.92, y: 12 }}
+          className="relative w-full max-w-xl text-center p-6 sm:p-10 rounded-3xl specular-card flex flex-col items-center"
         >
           {/* Top Close */}
           <button
@@ -109,54 +109,54 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
               sound.playClick()
               onClose()
             }}
-            className="absolute top-6 right-6 p-2 rounded-full bg-slate-800/60 text-slate-400 hover:text-white transition-colors cursor-pointer"
+            className="absolute top-5 right-5 p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer border border-white/5"
           >
             <X className="w-5 h-5" />
           </button>
 
           {/* Active Sprint Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-mono font-semibold uppercase tracking-wider mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/25 text-sky-400 text-xs font-mono font-semibold uppercase tracking-wider mb-3">
             <Zap className="w-3.5 h-3.5" />
             <span>Deep Cognitive Sprint</span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-bold text-white max-w-lg mb-1">
+          <h2 className="text-xl sm:text-2xl font-bold font-display text-white max-w-lg mb-1 tracking-tight">
             {activeBlock.title}
           </h2>
-          <p className="text-xs text-slate-400 mb-8 font-mono">
+          <p className="text-xs text-slate-400 mb-6 font-mono">
             {activeBlock.courseCode ? `[${activeBlock.courseCode}] ` : ''}Scheduled: {activeBlock.startTime} - {activeBlock.endTime}
           </p>
 
           {/* Glowing Timer Circle */}
-          <div className="relative w-64 h-64 flex items-center justify-center mb-8">
+          <div className="relative w-64 h-64 flex items-center justify-center mb-6">
             <svg className="w-full h-full -rotate-90">
               <circle
                 cx="128"
                 cy="128"
-                r="110"
-                className="stroke-slate-800"
-                strokeWidth="8"
+                r="108"
+                className="stroke-white/[0.06]"
+                strokeWidth="7"
                 fill="none"
               />
               <circle
                 cx="128"
                 cy="128"
-                r="110"
-                className="stroke-sky-400 transition-all duration-1000 ease-linear"
-                strokeWidth="8"
-                strokeDasharray={2 * Math.PI * 110}
-                strokeDashoffset={2 * Math.PI * 110 * (1 - progressPct / 100)}
+                r="108"
+                className="stroke-sky-400 transition-all duration-1000 ease-linear shadow-[0_0_15px_rgba(56,189,248,0.5)]"
+                strokeWidth="7"
+                strokeDasharray={2 * Math.PI * 108}
+                strokeDashoffset={2 * Math.PI * 108 * (1 - progressPct / 100)}
                 strokeLinecap="round"
                 fill="none"
               />
             </svg>
 
             <div className="absolute flex flex-col items-center">
-              <span className="text-5xl sm:text-6xl font-bold font-mono tracking-tight text-white">
+              <span className="text-5xl sm:text-6xl font-bold font-mono tracking-tight text-white drop-shadow-md">
                 {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
               </span>
-              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-widest mt-1">
-                {isRunning ? 'Focused Flow' : 'Paused'}
+              <span className="text-[11px] font-mono text-sky-400 uppercase tracking-widest mt-1">
+                {isRunning ? '● Focused Flow' : '❚❚ Paused'}
               </span>
             </div>
           </div>
@@ -168,7 +168,7 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
                 sound.playClick()
                 setIsRunning(!isRunning)
               }}
-              className="p-4 rounded-2xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold shadow-lg shadow-sky-500/25 transition-all cursor-pointer hover:scale-105 active:scale-95"
+              className="p-4 rounded-2xl bg-sky-400 hover:bg-sky-300 text-slate-950 font-bold shadow-xl shadow-sky-400/25 transition-all cursor-pointer hover:scale-105 active:scale-95"
             >
               {isRunning ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-0.5" />}
             </button>
@@ -177,7 +177,7 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
                 sound.playClick()
                 setSecondsRemaining(activeBlock.durationMinutes * 60)
               }}
-              className="p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
+              className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-300 transition-colors cursor-pointer border border-white/10"
               title="Reset Timer"
             >
               <RotateCcw className="w-5 h-5" />
@@ -185,7 +185,7 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
           </div>
 
           {/* Ambient Soundscape Generator */}
-          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs mb-6 font-mono">
+          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-[#06080e] border border-white/10 text-xs mb-6 font-mono">
             <span className="text-slate-400 px-2 flex items-center gap-1.5">
               <Volume2 className="w-3.5 h-3.5 text-sky-400" />
               Soundscape:
@@ -225,10 +225,10 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
           </div>
 
           {/* Adaptive Actions (Life Happened In-Session) */}
-          <div className="w-full grid grid-cols-2 gap-3 max-w-md pt-4 border-t border-slate-800 text-xs font-semibold">
+          <div className="w-full grid grid-cols-2 gap-3 max-w-md pt-4 border-t border-white/[0.08] text-xs font-semibold">
             <button
               onClick={handleFinishEarly}
-              className="py-2.5 px-4 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="py-2.5 px-4 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm shadow-emerald-950/20"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Finish Early (Done!)</span>
@@ -236,7 +236,7 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
 
             <button
               onClick={handleNeedMoreTime}
-              className="py-2.5 px-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="py-2.5 px-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm shadow-amber-950/20"
               title="Add 25 mins and auto-shift downstream blocks"
             >
               <Plus className="w-4 h-4" />

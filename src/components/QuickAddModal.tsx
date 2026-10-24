@@ -143,18 +143,18 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-2xl overflow-y-auto">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
+          initial={{ opacity: 0, scale: 0.94, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden my-auto"
+          exit={{ opacity: 0, scale: 0.94, y: 15 }}
+          className="relative w-full max-w-2xl specular-card rounded-3xl overflow-hidden my-auto"
         >
           {/* Header */}
-          <div className="p-4 sm:p-5 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
+          <div className="p-4 sm:p-5 bg-[#06080e]/95 border-b border-white/[0.08] flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <Plus className="w-5 h-5 text-sky-400" />
-              <h3 className="text-base font-bold text-white font-mono">
+              <h3 className="text-base font-bold font-display text-white tracking-tight">
                 Ingest Schedule & Commitments
               </h3>
             </div>
@@ -163,14 +163,14 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                 sound.playClick()
                 onClose()
               }}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer border border-white/5"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-slate-800 bg-slate-950/40 px-4 pt-2 gap-2 text-xs">
+          <div className="flex border-b border-white/[0.08] bg-[#06080e]/60 px-4 pt-2 gap-2 text-xs">
             <button
               onClick={() => setActiveTab('nlp')}
               className={`pb-2.5 px-3 font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${

@@ -8,7 +8,7 @@ import { QuickAddModal } from './components/QuickAddModal'
 import { ExportModal } from './components/ExportModal'
 import { FocusModeModal } from './components/FocusModeModal'
 import { ExtensionEmailModal } from './components/ExtensionEmailModal'
-import { BackgroundCanvas } from './components/BackgroundCanvas'
+import { ThreeCanvas } from './components/ThreeCanvas'
 import { BLANK_WORKSPACE, PRESET_SCENARIOS } from './utils/presets'
 import type { PresetScenario } from './utils/presets'
 import { generateRealisticPlan } from './utils/scheduler'
@@ -264,8 +264,9 @@ export function App() {
   const isWorkspaceEmpty = classes.length === 0 && deadlines.length === 0 && personal.length === 0
 
   return (
-    <div className="relative min-h-screen bg-[#060709] text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-sky-200">
-      <BackgroundCanvas />
+    <div className="relative min-h-screen bg-[#030508] text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-sky-200">
+      <ThreeCanvas />
+      <div className="fixed inset-0 pointer-events-none z-0 film-grain opacity-40" />
 
       {/* Global Precision Header */}
       <Header
@@ -306,13 +307,13 @@ export function App() {
       <main className="relative z-10 flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-5">
         {/* Onboarding Callout when Clean */}
         {isWorkspaceEmpty && (
-          <div className="hairline-card rounded-2xl p-6 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="specular-card rounded-2xl p-6 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="space-y-1 text-center sm:text-left">
               <div className="inline-flex items-center gap-2 text-xs font-mono text-sky-400 font-semibold uppercase tracking-wider">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Clean Academic Workspace</span>
               </div>
-              <h3 className="text-base font-bold text-white tracking-tight">
+              <h3 className="text-lg font-bold font-display text-white tracking-tight">
                 Turn your upcoming week of classes & deadlines into a recoverable reality.
               </h3>
               <p className="text-xs text-slate-400 max-w-xl">

@@ -128,23 +128,23 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-2xl overflow-y-auto">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
+          initial={{ opacity: 0, scale: 0.94, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-4xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden my-auto"
+          exit={{ opacity: 0, scale: 0.94, y: 15 }}
+          className="relative w-full max-w-4xl specular-card rounded-3xl overflow-hidden my-auto"
         >
           {/* Header */}
-          <div className="p-4 sm:p-6 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
+          <div className="p-4 sm:p-6 bg-[#06080e]/95 border-b border-white/[0.08] flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-rose-600 flex items-center justify-center shadow-lg shadow-amber-500/20 text-white font-bold">
                 <Zap className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <h2 className="text-lg font-bold font-display text-white flex items-center gap-2">
                   Academic Recovery Center
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold">
                     Cascade Solver
                   </span>
                 </h2>
@@ -159,7 +159,7 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
                 sound.playClick()
                 onClose()
               }}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-2 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer border border-white/5"
             >
               <X className="w-5 h-5" />
             </button>
@@ -167,16 +167,16 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
 
           <div className="p-4 sm:p-6 max-h-[75vh] overflow-y-auto space-y-6">
             {/* Mode Tabs */}
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
               <button
                 onClick={() => {
                   sound.playClick()
                   setActiveTab('presets')
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-mono transition-colors cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'presets'
-                    ? 'bg-sky-500 text-white shadow-md shadow-sky-500/25'
-                    : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
+                    ? 'bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/25'
+                    : 'bg-white/5 text-slate-400 hover:text-slate-200 border border-white/5'
                 }`}
               >
                 <Flame className="w-3.5 h-3.5" />
@@ -187,10 +187,10 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
                   sound.playClick()
                   setActiveTab('custom')
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-mono transition-colors cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'custom'
-                    ? 'bg-sky-500 text-white shadow-md shadow-sky-500/25'
-                    : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
+                    ? 'bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/25'
+                    : 'bg-white/5 text-slate-400 hover:text-slate-200 border border-white/5'
                 }`}
               >
                 <Sliders className="w-3.5 h-3.5" />
@@ -200,7 +200,7 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
 
             {/* Presets Grid */}
             {activeTab === 'presets' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {presetDisruptions.map((dis, idx) => (
                   <button
                     key={dis.id}
@@ -208,13 +208,13 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
                       sound.playClick()
                       setSelectedPresetIndex(idx)
                     }}
-                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer select-none ${
                       selectedPresetIndex === idx
-                        ? 'bg-sky-500/10 border-sky-400 text-white shadow-lg shadow-sky-950/40 ring-1 ring-sky-400'
-                        : 'bg-slate-950/40 border-slate-800 text-slate-300 hover:border-slate-700'
+                        ? 'bg-sky-500/15 border-sky-400 text-white shadow-lg shadow-sky-950/40 ring-1 ring-sky-400'
+                        : 'bg-[#080c16]/80 border-white/[0.08] text-slate-300 hover:border-white/20'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center justify-between mb-1.5">
                       <span className="text-xs font-bold font-mono text-amber-400">
                         {dis.day} · {dis.timeLostMinutes / 60}h Impact
                       </span>
@@ -222,8 +222,8 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
                         <CheckCircle2 className="w-4 h-4 text-sky-400" />
                       )}
                     </div>
-                    <div className="text-xs font-semibold text-slate-100">{dis.title}</div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">{dis.description}</div>
+                    <div className="text-xs font-bold text-slate-100">{dis.title}</div>
+                    <div className="text-[11px] text-slate-400 mt-1 leading-relaxed">{dis.description}</div>
                   </button>
                 ))}
               </div>
@@ -231,7 +231,7 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
 
             {/* Custom Disruption Form */}
             {activeTab === 'custom' && (
-              <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800 space-y-4">
+              <div className="bg-[#080c16]/90 p-4 rounded-xl border border-white/[0.08] space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="text-xs font-mono text-slate-400 block mb-1">
@@ -240,7 +240,7 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
                     <select
                       value={customDay}
                       onChange={(e) => setCustomDay(e.target.value as DayOfWeek)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white"
+                      className="w-full bg-[#06080e] border border-white/10 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-sky-400"
                     >
                       {DAYS_OF_WEEK.map((d) => (
                         <option key={d} value={d}>
@@ -258,7 +258,7 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
                       type="time"
                       value={customStartTime}
                       onChange={(e) => setCustomStartTime(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white"
+                      className="w-full bg-[#06080e] border border-white/10 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-sky-400"
                     />
                   </div>
 
@@ -281,8 +281,8 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
             )}
 
             {/* Recovery Proposal Visualizer */}
-            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 sm:p-5 space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
+            <div className="bg-[#080c16]/90 border border-white/[0.08] rounded-xl p-4 sm:p-5 space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b border-white/[0.08]">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-sky-400" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 font-mono">
@@ -290,8 +290,8 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
                   </h3>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400">Confidence:</span>
-                  <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  <span className="text-xs text-slate-400 font-mono">Confidence:</span>
+                  <span className="text-xs font-mono font-bold text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded border border-emerald-500/30">
                     {proposal.confidenceScore}% Viable
                   </span>
                 </div>
@@ -308,7 +308,7 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
                     className={`text-xs p-2.5 rounded-lg flex items-start gap-2.5 ${
                       idx === 0
                         ? 'bg-sky-500/10 border border-sky-500/30 text-sky-200 font-medium'
-                        : 'bg-slate-900 border border-slate-800 text-slate-300'
+                        : 'bg-white/[0.03] border border-white/[0.06] text-slate-300'
                     }`}
                   >
                     <ArrowRight className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
@@ -333,18 +333,18 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
               )}
 
               {/* Stats badges */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2">
-                <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-center">
-                  <div className="text-[10px] text-slate-400 font-mono">Sessions Rescheduled</div>
-                  <div className="text-sm font-bold text-sky-400">{proposal.rescheduledCount}</div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2">
+                <div className="bg-[#06080e] p-3 rounded-xl border border-white/[0.08] text-center">
+                  <div className="text-[10px] text-slate-400 font-mono uppercase">Sessions Rescheduled</div>
+                  <div className="text-base font-bold font-mono text-sky-400">{proposal.rescheduledCount}</div>
                 </div>
-                <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-center">
-                  <div className="text-[10px] text-slate-400 font-mono">Protected Sleep</div>
-                  <div className="text-sm font-bold text-emerald-400">100% Guarded</div>
+                <div className="bg-[#06080e] p-3 rounded-xl border border-white/[0.08] text-center">
+                  <div className="text-[10px] text-slate-400 font-mono uppercase">Protected Sleep</div>
+                  <div className="text-base font-bold font-mono text-emerald-400">100% Guarded</div>
                 </div>
-                <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-center col-span-2 sm:col-span-1">
-                  <div className="text-[10px] text-slate-400 font-mono">Optional Dropped</div>
-                  <div className="text-sm font-bold text-slate-300">
+                <div className="bg-[#06080e] p-3 rounded-xl border border-white/[0.08] text-center col-span-2 sm:col-span-1">
+                  <div className="text-[10px] text-slate-400 font-mono uppercase">Optional Dropped</div>
+                  <div className="text-base font-bold font-mono text-slate-300">
                     {proposal.droppedOptionalCount}
                   </div>
                 </div>
@@ -353,7 +353,7 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
           </div>
 
           {/* Footer Actions */}
-          <div className="p-4 sm:p-5 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+          <div className="p-4 sm:p-5 bg-[#06080e] border-t border-white/[0.08] flex items-center justify-between">
             <button
               onClick={() => {
                 sound.playClick()

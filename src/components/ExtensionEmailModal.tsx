@@ -64,18 +64,18 @@ ${deadline.courseCode} Student`
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-2xl">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="relative w-full max-w-xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-6"
+          initial={{ opacity: 0, scale: 0.94, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.94, y: 12 }}
+          className="relative w-full max-w-xl specular-card rounded-3xl shadow-2xl p-6"
         >
-          <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+          <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
             <div className="flex items-center gap-2.5">
               <Mail className="w-5 h-5 text-sky-400" />
               <div>
-                <h3 className="text-sm font-bold text-white font-mono">
+                <h3 className="text-base font-bold font-display text-white">
                   Tactical Professor Extension Drafter
                 </h3>
                 <p className="text-[11px] text-slate-400">
@@ -88,7 +88,7 @@ ${deadline.courseCode} Student`
                 sound.playClick()
                 onClose()
               }}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer border border-white/5"
             >
               <X className="w-5 h-5" />
             </button>

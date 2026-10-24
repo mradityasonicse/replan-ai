@@ -47,10 +47,10 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-sm font-bold tracking-tight text-white uppercase">
+                <span className="font-display text-base font-black tracking-tight text-white uppercase">
                   CHRONO<span className="text-sky-400">FLOW</span>
                 </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 font-semibold tracking-wide">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/25 font-bold tracking-wide">
                   v2.4 RESILIENT
                 </span>
               </div>
