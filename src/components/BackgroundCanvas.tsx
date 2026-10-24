@@ -24,50 +24,71 @@ export const BackgroundCanvas: React.FC = () => {
 
     let mouseX = width / 2
     let mouseY = height / 3
+    let targetMouseX = mouseX
+    let targetMouseY = mouseY
 
     const handleMouseMove = (e: MouseEvent) => {
-      mouseX = e.clientX
-      mouseY = e.clientY
+      targetMouseX = e.clientX
+      targetMouseY = e.clientY
     }
 
     window.addEventListener('mousemove', handleMouseMove)
 
-    let angle = 0
+    // Nodes for technical geometric grid
+    const cols = 28
+    const rows = 18
+    let tick = 0
 
     const render = () => {
-      angle += 0.003
+      tick += 0.015
+      mouseX += (targetMouseX - mouseX) * 0.08
+      mouseY += (targetMouseY - mouseY) * 0.08
+
       ctx.clearRect(0, 0, width, height)
 
-      // Base atmospheric deep gradient
-      const bgGrad = ctx.createLinearGradient(0, 0, 0, height)
-      bgGrad.addColorStop(0, '#07090e')
-      bgGrad.addColorStop(1, '#0c0e17')
-      ctx.fillStyle = bgGrad
+      // Stark Obsidian Base
+      ctx.fillStyle = '#060709'
       ctx.fillRect(0, 0, width, height)
 
-      // Primary interactive subtle glow (Cyan / Sky)
-      const grad1 = ctx.createRadialGradient(
+      // Interactive Specular Spotlight (Cyan highlight tracking mouse)
+      const spotGrad = ctx.createRadialGradient(
         mouseX,
         mouseY,
-        10,
+        0,
         mouseX,
         mouseY,
-        Math.max(width, height) * 0.45
+        450
       )
-      grad1.addColorStop(0, 'rgba(14, 165, 233, 0.08)')
-      grad1.addColorStop(0.5, 'rgba(14, 165, 233, 0.02)')
-      grad1.addColorStop(1, 'rgba(0, 0, 0, 0)')
-      ctx.fillStyle = grad1
+      spotGrad.addColorStop(0, 'rgba(56, 189, 248, 0.07)')
+      spotGrad.addColorStop(0.4, 'rgba(56, 189, 248, 0.015)')
+      spotGrad.addColorStop(1, 'rgba(0, 0, 0, 0)')
+      ctx.fillStyle = spotGrad
       ctx.fillRect(0, 0, width, height)
 
-      // Secondary floating ambient orb (Emerald / Amber balance)
-      const orbX = width * 0.7 + Math.sin(angle) * 120
-      const orbY = height * 0.4 + Math.cos(angle * 0.8) * 90
-      const grad2 = ctx.createRadialGradient(orbX, orbY, 20, orbX, orbY, 400)
-      grad2.addColorStop(0, 'rgba(16, 185, 129, 0.05)')
-      grad2.addColorStop(1, 'rgba(0, 0, 0, 0)')
-      ctx.fillStyle = grad2
-      ctx.fillRect(0, 0, width, height)
+      // Micro grid crosshairs
+      const stepX = width / cols
+      const stepY = height / rows
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.06)'
+      for (let i = 1; i < cols; i++) {
+        for (let j = 1; j < rows; j++) {
+          const x = i * stepX
+          const y = j * stepY
+
+          const dx = x - mouseX
+          const dy = y - mouseY
+          const dist = Math.sqrt(dx * dx + dy * dy)
+
+          if (dist < 260) {
+            const factor = 1 - dist / 260
+            ctx.fillStyle = `rgba(56, 189, 248, ${0.08 + factor * 0.2})`
+            ctx.fillRect(x - 1, y - 1, 2, 2)
+          } else {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.025)'
+            ctx.fillRect(x - 0.75, y - 0.75, 1.5, 1.5)
+          }
+        }
+      }
 
       animationFrameId = requestAnimationFrame(render)
     }
@@ -82,10 +103,12 @@ export const BackgroundCanvas: React.FC = () => {
   }, [])
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0 opacity-80"
-      style={{ filter: 'blur(20px)' }}
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        className="fixed inset-0 pointer-events-none z-0"
+      />
+      <div className="fixed inset-0 pointer-events-none z-0 film-grain" />
+    </>
   )
 }

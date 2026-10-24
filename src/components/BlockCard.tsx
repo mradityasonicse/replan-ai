@@ -59,28 +59,29 @@ export const BlockCard: React.FC<BlockCardProps> = ({
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      whileHover={{ y: -2, transition: { duration: 0.15 } }}
-      className={`relative group rounded-xl p-2.5 text-left border transition-all duration-150 ${
-        isStudy && !isCompleted ? 'cursor-pointer hover:border-sky-400' : ''
+      whileHover={{ y: -2, scale: 1.01, transition: { duration: 0.15 } }}
+      whileTap={{ scale: 0.99 }}
+      className={`relative group rounded-xl p-2.5 text-left transition-all duration-150 border ${
+        isStudy && !isCompleted ? 'cursor-pointer' : ''
       } ${
         isCompleted
-          ? 'bg-slate-950/30 border-slate-800/50 opacity-60'
+          ? 'bg-[#08090d]/60 border-white/5 opacity-50'
           : isDisplaced || isInterrupted
-          ? 'bg-rose-950/20 border-rose-500/40 shadow-sm'
+          ? 'bg-rose-950/20 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.15)]'
           : isClass
-          ? 'bg-slate-900/90 border-slate-700/80 shadow-md'
+          ? 'bg-[#0d1017] border-white/10 hover:border-white/20'
           : isStudy
-          ? 'bg-slate-900/95 border-sky-500/30 shadow-md shadow-sky-950/20'
-          : 'bg-slate-900/70 border-slate-800 hover:border-slate-700'
+          ? 'bg-[#0f131d] border-sky-500/25 hover:border-sky-400 shadow-sm shadow-sky-950/40'
+          : 'bg-[#0d0f15] border-white/10 hover:border-white/20'
       }`}
       style={{
-        borderLeftWidth: '3.5px',
+        borderLeftWidth: '3px',
         borderLeftColor: block.color || '#38bdf8',
       }}
     >
       {/* Top Bar: Time and Status/Badge */}
       <div className="flex items-center justify-between gap-1 mb-1">
-        <div className="flex items-center gap-1.5 text-[11px] font-mono font-medium text-slate-300">
+        <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-300">
           <Clock className="w-3 h-3 text-slate-400" />
           <span>
             {block.startTime} - {block.endTime}
@@ -92,31 +93,31 @@ export const BlockCard: React.FC<BlockCardProps> = ({
         <div className="flex items-center gap-1">
           {isClass && (
             <span
-              className="text-[10px] text-slate-400 bg-slate-800/80 px-1 py-0.2 rounded flex items-center gap-0.5"
+              className="text-[9px] font-mono font-medium text-slate-400 bg-white/5 px-1 py-0.2 rounded flex items-center gap-0.5"
               title="Fixed Course - Immovable"
             >
-              <Lock className="w-2.5 h-2.5" />
+              <Lock className="w-2.5 h-2.5 text-slate-400" />
               Class
             </span>
           )}
 
           {isRecovered && (
-            <span className="text-[9px] font-semibold tracking-wider text-amber-300 bg-amber-500/15 border border-amber-500/30 px-1 rounded flex items-center gap-0.5 animate-pulse">
+            <span className="text-[9px] font-mono font-semibold tracking-wider text-amber-300 bg-amber-500/15 border border-amber-500/30 px-1 rounded flex items-center gap-0.5 animate-pulse">
               <Sparkles className="w-2.5 h-2.5" />
               Recovered
             </span>
           )}
 
           {isDisplaced && (
-            <span className="text-[9px] font-semibold text-rose-300 bg-rose-500/20 border border-rose-500/30 px-1 rounded">
-              Needs Recovery
+            <span className="text-[9px] font-mono font-semibold text-rose-300 bg-rose-500/20 border border-rose-500/30 px-1 rounded">
+              Disrupted
             </span>
           )}
 
           {isStudy && !isDisplaced && (
             <div className="flex items-center gap-1">
               <span
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-sky-400 bg-sky-500/10 px-1 py-0.5 rounded flex items-center gap-0.5"
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono text-sky-400 bg-sky-500/10 px-1 py-0.5 rounded flex items-center gap-0.5"
                 title="Start Focus Timer"
               >
                 <Play className="w-2.5 h-2.5 fill-current" />
@@ -141,12 +142,12 @@ export const BlockCard: React.FC<BlockCardProps> = ({
       {/* Title & Course Code */}
       <div className="flex flex-col">
         {block.courseCode && (
-          <span className="text-[10px] font-bold tracking-wider font-mono text-sky-400 uppercase">
+          <span className="text-[10px] font-bold font-mono tracking-wider text-sky-400 uppercase">
             {block.courseCode}
           </span>
         )}
         <h4
-          className={`text-xs font-semibold leading-tight transition-all ${
+          className={`text-xs font-semibold leading-snug transition-all ${
             isCompleted
               ? 'line-through text-slate-500'
               : 'text-slate-100 group-hover:text-white'
@@ -158,9 +159,9 @@ export const BlockCard: React.FC<BlockCardProps> = ({
 
       {/* Footnote / Stage notes */}
       {block.notes && (
-        <div className="mt-1.5 text-[10px] text-slate-400 flex items-center justify-between gap-1">
+        <div className="mt-1.5 text-[10px] text-slate-400 flex items-center justify-between gap-1 font-mono">
           <span className="truncate flex items-center gap-1">
-            {isClass ? <MapPin className="w-2.5 h-2.5 text-slate-500" /> : null}
+            {isClass ? <MapPin className="w-2.5 h-2.5 text-slate-400" /> : null}
             {block.notes}
           </span>
 
