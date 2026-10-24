@@ -37,7 +37,6 @@ interface HeaderProps {
   hasDisplacedBlocks: boolean
   onRebalancePlan?: () => void
   onOpenStudio?: () => void
-  onOpenGodMode?: () => void
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -57,7 +56,6 @@ export const Header: React.FC<HeaderProps> = ({
   hasDisplacedBlocks,
   onRebalancePlan,
   onOpenStudio,
-  onOpenGodMode,
 }) => {
   const allProfiles = [BLANK_WORKSPACE, ...PRESET_SCENARIOS]
 
@@ -214,21 +212,6 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Cpu className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
               <span className="hidden sm:inline">AI Studio</span>
-            </button>
-          )}
-
-          {/* God-Mode Senior Engineer Hub */}
-          {onOpenGodMode && (
-            <button
-              onClick={() => {
-                sound.playClick()
-                onOpenGodMode()
-              }}
-              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 border border-amber-500/40 text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm shadow-amber-500/10"
-              title="Open 32 Repositories & God-Mode Architecture Hub [G]"
-            >
-              <Zap className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
-              <span className="hidden md:inline">God-Mode</span>
             </button>
           )}
 
